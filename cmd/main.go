@@ -1,13 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"garantex-monitor/config"
+	"garantex-monitor/internal/infrastructure/logs"
+
+	"go.uber.org/zap"
 )
 
 func main() {
 
-	cfg := config.MustLoad(".env")
+	conf := config.MustLoad()
 
-	fmt.Println(cfg)
+	logger := logs.NewLogger(conf)
+
+	logger.Info("logger", zap.String("key", "value"))
 }
