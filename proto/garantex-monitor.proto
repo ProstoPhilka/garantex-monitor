@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package gmongrpc;
+
+option go_package = "./grpc";
+
+service GarantexMonitor {
+    rpc GetRates(GetRatesRequest) returns (GetRatesResponse);
+}
+
+message Ask {
+    string price = 1;
+}
+
+message Bid {
+    string price = 1;
+}
+
+message GetRatesRequest {
+    string market = 1;
+}
+
+message GetRatesResponse {
+    Ask ask = 1;
+    Bid bid = 2;
+    int64 timestamp = 3;
+}

@@ -1,0 +1,11 @@
+version: "3"
+
+tasks:
+  protogen:
+    desc: "Генерация Go файлов из proto"
+    cmds:
+      - protoc --go_out=./proto/gen --go-grpc_out=./proto/gen ./proto/garantex-monitor.proto
+  gorun:
+    desc: "Локальный запуск приложения"
+    cmds:
+      - go run cmd/main.go
