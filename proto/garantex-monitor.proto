@@ -1,27 +1,16 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
 package gmongrpc;
 
 option go_package = "./grpc";
 
 service GarantexMonitor {
-    rpc GetRates(GetRatesRequest) returns (GetRatesResponse);
-}
-
-message Ask {
-    string price = 1;
-}
-
-message Bid {
-    string price = 1;
-}
-
-message GetRatesRequest {
-    string market = 1;
+    rpc GetRates(google.protobuf.Empty) returns (GetRatesResponse);
 }
 
 message GetRatesResponse {
-    Ask ask = 1;
-    Bid bid = 2;
+    string askPrice = 1;
+    string bidPrice = 2;
     int64 timestamp = 3;
 }

@@ -7,6 +7,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -17,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GarantexMonitorClient interface {
-	GetRates(ctx context.Context, in *GetRatesRequest, opts ...grpc.CallOption) (*GetRatesResponse, error)
+	GetRates(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetRatesResponse, error)
 }
 
 type garantexMonitorClient struct {
@@ -28,7 +29,7 @@ func NewGarantexMonitorClient(cc grpc.ClientConnInterface) GarantexMonitorClient
 	return &garantexMonitorClient{cc}
 }
 
-func (c *garantexMonitorClient) GetRates(ctx context.Context, in *GetRatesRequest, opts ...grpc.CallOption) (*GetRatesResponse, error) {
+func (c *garantexMonitorClient) GetRates(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetRatesResponse, error) {
 	out := new(GetRatesResponse)
 	err := c.cc.Invoke(ctx, "/gmongrpc.GarantexMonitor/GetRates", in, out, opts...)
 	if err != nil {
@@ -41,7 +42,7 @@ func (c *garantexMonitorClient) GetRates(ctx context.Context, in *GetRatesReques
 // All implementations must embed UnimplementedGarantexMonitorServer
 // for forward compatibility
 type GarantexMonitorServer interface {
-	GetRates(context.Context, *GetRatesRequest) (*GetRatesResponse, error)
+	GetRates(context.Context, *emptypb.Empty) (*GetRatesResponse, error)
 	mustEmbedUnimplementedGarantexMonitorServer()
 }
 
@@ -49,7 +50,7 @@ type GarantexMonitorServer interface {
 type UnimplementedGarantexMonitorServer struct {
 }
 
-func (UnimplementedGarantexMonitorServer) GetRates(context.Context, *GetRatesRequest) (*GetRatesResponse, error) {
+func (UnimplementedGarantexMonitorServer) GetRates(context.Context, *emptypb.Empty) (*GetRatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRates not implemented")
 }
 func (UnimplementedGarantexMonitorServer) mustEmbedUnimplementedGarantexMonitorServer() {}
@@ -66,7 +67,7 @@ func RegisterGarantexMonitorServer(s *grpc.Server, srv GarantexMonitorServer) {
 }
 
 func _GarantexMonitor_GetRates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRatesRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func _GarantexMonitor_GetRates_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/gmongrpc.GarantexMonitor/GetRates",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GarantexMonitorServer).GetRates(ctx, req.(*GetRatesRequest))
+		return srv.(GarantexMonitorServer).GetRates(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

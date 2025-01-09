@@ -4,7 +4,7 @@ tasks:
   protogen:
     desc: "Генерация Go файлов из proto"
     cmds:
-      - protoc --go_out=./proto/gen --go-grpc_out=./proto/gen ./proto/garantex-monitor.proto
+      - protoc --go_out=./gen --go-grpc_out=./gen ./proto/garantex-monitor.proto
   gorun:
     desc: "Локальный запуск приложения"
     cmds:
