@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	pb "garantex-monitor/gen/grpc"
+	"garantex-monitor/gen/pb"
 	"garantex-monitor/internal/service"
 
 	"google.golang.org/protobuf/types/known/emptypb"

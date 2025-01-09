@@ -12,6 +12,7 @@ type Config struct {
 	Env  string
 	Host string
 	Port string
+	DB   string
 }
 
 func MustLoad() *Config {
@@ -24,5 +25,6 @@ func MustLoad() *Config {
 		Env:  os.Getenv("ENV"),
 		Host: os.Getenv("HOST"),
 		Port: os.Getenv("PORT"),
+		DB:   os.Getenv("DATABASE_URL"),
 	}
 }

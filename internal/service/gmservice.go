@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"garantex-monitor/internal/models"
+	"garantex-monitor/internal/storage"
 	"net/http"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -15,14 +17,16 @@ const (
 )
 
 type GarantexMonitor struct {
-	logger *zap.Logger
-	client *http.Client
+	logger  *zap.Logger
+	client  *http.Client
+	storage storage.GMStorageInterface
 }
 
-func NewGarantexMonitor(logger *zap.Logger) *GarantexMonitor {
+func NewGarantexMonitor(storage storage.GMStorageInterface, logger *zap.Logger) *GarantexMonitor {
 	return &GarantexMonitor{
-		logger: logger,
-		client: &http.Client{},
+		logger:  logger,
+		client:  &http.Client{},
+		storage: storage,
 	}
 }
 
@@ -56,6 +60,19 @@ func (g *GarantexMonitor) GetRates(ctx context.Context) (*GetRatesOut, error) {
 	}
 
 	// TODO: save to DB
+	go func() {
+		err := g.storage.AddRate(
+			context.Background(),
+			&models.DepthDTO{
+				Timestamp: time.Unix(res.Timestamp, 0),
+				Ask:       res.Asks[0].Price,
+				Bid:       res.Bids[0].Price,
+			})
+		if err != nil {
+			g.logger.Error("failed to add rate", zap.Error(err))
+			return
+		}
+	}()
 
 	return &GetRatesOut{
 		AskPrice:  res.Asks[0].Price,

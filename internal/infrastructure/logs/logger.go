@@ -31,7 +31,7 @@ func NewLogger(conf *config.Config) *zap.Logger {
 		zapConf.ErrorOutputPaths = []string{"stderr"}
 		zapConf.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
 		zapConf.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-		zapConf.EncoderConfig.ConsoleSeparator = "   "
+		//zapConf.EncoderConfig.ConsoleSeparator = "   "
 		zapConf.Encoding = "console"
 	case Dev:
 		// Level: DEBUG; Output: stdout, file; fmt: json
