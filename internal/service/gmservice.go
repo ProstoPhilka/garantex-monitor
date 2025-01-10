@@ -16,21 +16,21 @@ const (
 	URL = "https://garantex.org/api/v2/depth?market=usdtrub"
 )
 
-type GarantexMonitor struct {
+type GMService struct {
 	logger  *zap.Logger
 	client  *http.Client
-	storage storage.GMStorageInterface
+	storage storage.GMStorageIface
 }
 
-func NewGarantexMonitor(storage storage.GMStorageInterface, logger *zap.Logger) *GarantexMonitor {
-	return &GarantexMonitor{
+func NewGMService(storage storage.GMStorageIface, logger *zap.Logger) *GMService {
+	return &GMService{
 		logger:  logger,
 		client:  &http.Client{},
 		storage: storage,
 	}
 }
 
-func (g *GarantexMonitor) GetRates(ctx context.Context) (*GetRatesOut, error) {
+func (g *GMService) GetRates(ctx context.Context) (*GetRatesOut, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
 	if err != nil {
 		g.logger.Error("Failed to create request", zap.Error(err))

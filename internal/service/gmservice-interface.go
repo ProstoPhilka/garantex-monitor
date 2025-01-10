@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-type GarantexMotitorIface interface {
+type GMServiceIface interface {
 	GetRates(context.Context) (*GetRatesOut, error)
 }
 

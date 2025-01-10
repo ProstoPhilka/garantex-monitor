@@ -5,6 +5,6 @@ import (
 	"garantex-monitor/internal/models"
 )
 
-type GMStorageInterface interface {
+type GMStorageIface interface {
 	AddRate(context.Context, *models.DepthDTO) error
 }

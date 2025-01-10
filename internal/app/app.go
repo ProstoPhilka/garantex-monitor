@@ -5,8 +5,10 @@ import (
 	"garantex-monitor/config"
 	"garantex-monitor/gen/pb"
 	"garantex-monitor/internal/controller"
+	"garantex-monitor/internal/health"
 	"garantex-monitor/internal/service"
 	"garantex-monitor/internal/storage"
+
 	"net"
 	"os"
 	"os/signal"
@@ -16,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -53,39 +56,47 @@ func NewApp(conf *config.Config, logger *zap.Logger) *App {
 }
 
 func (a *App) Bootstrap(options ...interface{}) Runner {
-	a.logger.Debug("creating database connection")
 	conn, err := pgx.Connect(context.Background(), a.conf.DB)
 	if err != nil {
-		a.logger.Fatal(err.Error())
+		a.logger.Fatal(
+			"failed to create database connection",
+			zap.String("databaseURL", a.conf.DB),
+			zap.Error(err))
 	}
-	a.connDB = conn
 
-	a.logger.Debug("creating migrator")
 	m, err := migrate.New("file://./migrations", a.conf.DB)
 	if err != nil {
-		a.logger.Fatal(err.Error())
+		a.logger.Fatal(
+			"failed to create migrator",
+			zap.String("sourceURL", "file://./migrations"),
+			zap.String("databaseURL", a.conf.DB),
+			zap.Error(err))
+	}
+	if err = m.Up(); err != nil {
+		a.logger.Debug("failed to up migrations", zap.Error(err))
 	}
 
-	err = m.Up()
-	if err != nil {
-		a.logger.Debug(err.Error())
-	}
-
-	a.logger.Debug("bootstraping modules")
 	storage := storage.NewGMStorage(conn)
-	service := service.NewGarantexMonitor(storage, a.logger)
-	controller := controller.NewController(service, a.logger)
+	service := service.NewGMService(storage, a.logger)
+	controller := controller.NewGMController(service, a.logger)
+	healhController := health.NewGMHealhController(conn, a.logger)
 
-	a.logger.Debug("creating grpc server")
-	a.grpcSrv = grpc.NewServer()
+	grpcSrv := grpc.NewServer()
 	srv := controller
-	pb.RegisterGarantexMonitorServer(a.grpcSrv, srv)
+	pb.RegisterGarantexMonitorServer(grpcSrv, srv)
+	grpc_health_v1.RegisterHealthServer(grpcSrv, healhController)
 
-	a.logger.Debug("creating tcp listener", zap.String("host", a.conf.Host), zap.String("port", a.conf.Port))
 	lis, err := net.Listen("tcp", a.conf.Host+":"+a.conf.Port)
 	if err != nil {
-		a.logger.Fatal(err.Error())
+		a.logger.Fatal(
+			"failed to create tcp listener",
+			zap.String("host", a.conf.Host),
+			zap.String("port", a.conf.Port),
+			zap.Error(err))
 	}
+
+	a.connDB = conn
+	a.grpcSrv = grpcSrv
 	a.lis = lis
 
 	return a
