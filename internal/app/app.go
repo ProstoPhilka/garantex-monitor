@@ -73,18 +73,19 @@ func (a *App) Bootstrap(options ...interface{}) Runner {
 			zap.Error(err))
 	}
 	if err = m.Up(); err != nil {
+		//if errors.Is(err, )
 		a.logger.Debug("failed to up migrations", zap.Error(err))
 	}
 
 	storage := storage.NewGMStorage(conn)
 	service := service.NewGMService(storage, a.logger)
 	controller := controller.NewGMController(service, a.logger)
-	healhController := health.NewGMHealhController(conn, a.logger)
+	healhCheck := health.NewGMHealhCheck(conn, a.logger)
 
 	grpcSrv := grpc.NewServer()
 	srv := controller
 	pb.RegisterGarantexMonitorServer(grpcSrv, srv)
-	grpc_health_v1.RegisterHealthServer(grpcSrv, healhController)
+	grpc_health_v1.RegisterHealthServer(grpcSrv, healhCheck)
 
 	lis, err := net.Listen("tcp", a.conf.Host+":"+a.conf.Port)
 	if err != nil {

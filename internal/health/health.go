@@ -8,20 +8,20 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
-type GMHealhController struct {
+type GMHealhCheck struct {
 	grpc_health_v1.UnimplementedHealthServer
 	db     *pgx.Conn
 	logger *zap.Logger
 }
 
-func NewGMHealhController(db *pgx.Conn, logger *zap.Logger) *GMHealhController {
-	return &GMHealhController{
+func NewGMHealhCheck(db *pgx.Conn, logger *zap.Logger) *GMHealhCheck {
+	return &GMHealhCheck{
 		db:     db,
 		logger: logger,
 	}
 }
 
-func (hc *GMHealhController) Check(
+func (hc *GMHealhCheck) Check(
 	ctx context.Context,
 	in *grpc_health_v1.HealthCheckRequest,
 ) (*grpc_health_v1.HealthCheckResponse, error) {

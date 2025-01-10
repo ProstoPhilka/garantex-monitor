@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"garantex-monitor/internal/models"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -18,9 +17,9 @@ func NewGMStorage(conn *pgx.Conn) *GMStorage {
 	}
 }
 
-func (g *GMStorage) AddRate(ctx context.Context, depth *models.DepthDTO) error {
+func (g *GMStorage) AddRate(ctx context.Context, in *AddRateIn) error {
 	query := "INSERT INTO usdt_rates (timestamp, ask, bid) VALUES ($1, $2, $3)"
-	_, err := g.conn.Exec(ctx, query, depth.Timestamp, depth.Ask, depth.Bid)
+	_, err := g.conn.Exec(ctx, query, in.Timestamp, in.Ask, in.Bid)
 	if err != nil {
 		return fmt.Errorf("failed to insert rate: %w", err)
 	}

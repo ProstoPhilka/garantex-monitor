@@ -63,7 +63,7 @@ func (g *GMService) GetRates(ctx context.Context) (*GetRatesOut, error) {
 	go func() {
 		err := g.storage.AddRate(
 			context.Background(),
-			&models.DepthDTO{
+			&storage.AddRateIn{
 				Timestamp: time.Unix(res.Timestamp, 0),
 				Ask:       res.Asks[0].Price,
 				Bid:       res.Bids[0].Price,

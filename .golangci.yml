@@ -1,9 +1,9 @@
 linters:
   enable:
-    # - bodyclose
-    # - revive
-    # - errcheck
-    # - staticcheck
-    # - unused
-    # - gocyclo
+    - bodyclose
+    - revive
+    - errcheck
+    - staticcheck
+    - unused
+    - gocyclo
     - unparam

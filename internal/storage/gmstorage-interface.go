@@ -2,9 +2,15 @@ package storage
 
 import (
 	"context"
-	"garantex-monitor/internal/models"
+	"time"
 )
 
 type GMStorageIface interface {
-	AddRate(context.Context, *models.DepthDTO) error
+	AddRate(context.Context, *AddRateIn) error
+}
+
+type AddRateIn struct {
+	Timestamp time.Time
+	Ask       string
+	Bid       string
 }
