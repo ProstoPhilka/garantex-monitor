@@ -2,12 +2,16 @@ package app
 
 import (
 	"context"
+	"errors"
 	"garantex-monitor/config"
 	"garantex-monitor/gen/pb"
 	"garantex-monitor/internal/controller"
 	"garantex-monitor/internal/health"
 	"garantex-monitor/internal/service"
 	"garantex-monitor/internal/storage"
+	"garantex-monitor/pkg/metrics"
+	"garantex-monitor/pkg/tracer"
+	"net/http"
 
 	"net"
 	"os"
@@ -16,6 +20,9 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -56,6 +63,28 @@ func NewApp(conf *config.Config, logger *zap.Logger) *App {
 }
 
 func (a *App) Bootstrap(options ...interface{}) Runner {
+	// Настройка експортера и провайдера для трейсов
+	tr, err := tracer.NewTracerProvider(context.Background(), a.conf.TraceURL, a.conf.Name)
+	if err != nil {
+		a.logger.Fatal(
+			"failed to create tracer provider",
+			zap.String("trace url", a.conf.TraceURL),
+			zap.String("service name", a.conf.Name),
+			zap.Error(err))
+	}
+	otel.SetTracerProvider(tr)
+
+	// Регистрация всех метрик и создание http сервера для prometheus
+	metrics.MustAllRegister()
+
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	//
 	conn, err := pgx.Connect(context.Background(), a.conf.DB)
 	if err != nil {
 		a.logger.Fatal(
@@ -72,20 +101,24 @@ func (a *App) Bootstrap(options ...interface{}) Runner {
 			zap.String("databaseURL", a.conf.DB),
 			zap.Error(err))
 	}
+
 	if err = m.Up(); err != nil {
-		//if errors.Is(err, )
-		a.logger.Debug("failed to up migrations", zap.Error(err))
+		if !errors.Is(err, migrate.ErrNoChange) {
+			a.logger.Fatal("failed to up migrations", zap.Error(err))
+		}
+		a.logger.Warn("migrate", zap.Error(err))
 	}
 
 	storage := storage.NewGMStorage(conn)
 	service := service.NewGMService(storage, a.logger)
-	controller := controller.NewGMController(service, a.logger)
+	srv := controller.NewGMController(service, a.logger, "tracerName")
 	healhCheck := health.NewGMHealhCheck(conn, a.logger)
 
-	grpcSrv := grpc.NewServer()
-	srv := controller
-	pb.RegisterGarantexMonitorServer(grpcSrv, srv)
-	grpc_health_v1.RegisterHealthServer(grpcSrv, healhCheck)
+	s := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+	)
+	pb.RegisterGarantexMonitorServer(s, srv)
+	grpc_health_v1.RegisterHealthServer(s, healhCheck)
 
 	lis, err := net.Listen("tcp", a.conf.Host+":"+a.conf.Port)
 	if err != nil {
@@ -97,7 +130,7 @@ func (a *App) Bootstrap(options ...interface{}) Runner {
 	}
 
 	a.connDB = conn
-	a.grpcSrv = grpcSrv
+	a.grpcSrv = s
 	a.lis = lis
 
 	return a
@@ -122,7 +155,19 @@ func (a *App) Run() {
 		a.grpcSrv.GracefulStop()
 	}()
 
-	// Server
+	// HTTP Server
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := http.ListenAndServe(":8080", mux)
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			a.logger.Error("failed to serve http server", zap.Error(err))
+		}
+	}()
+
+	// gRPC Server
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -131,6 +176,8 @@ func (a *App) Run() {
 			a.logger.Fatal("failed to serve gRPC server", zap.Error(err))
 		}
 	}()
+
+	//
 
 	wg.Wait()
 }

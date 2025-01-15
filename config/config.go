@@ -8,11 +8,12 @@ import (
 )
 
 type Config struct {
-	Name string
-	Env  string
-	Host string
-	Port string
-	DB   string
+	Name     string
+	Env      string
+	Host     string
+	Port     string
+	DB       string
+	TraceURL string
 }
 
 func MustLoad() *Config {
@@ -21,10 +22,11 @@ func MustLoad() *Config {
 	}
 
 	return &Config{
-		Name: os.Getenv("APP_NAME"),
-		Env:  os.Getenv("ENV"),
-		Host: os.Getenv("HOST"),
-		Port: os.Getenv("PORT"),
-		DB:   os.Getenv("DATABASE_URL"),
+		Name:     os.Getenv("APP_NAME"),
+		Env:      os.Getenv("ENV"),
+		Host:     os.Getenv("HOST"),
+		Port:     os.Getenv("PORT"),
+		DB:       os.Getenv("DATABASE_URL"),
+		TraceURL: os.Getenv("TRACE_URL"),
 	}
 }

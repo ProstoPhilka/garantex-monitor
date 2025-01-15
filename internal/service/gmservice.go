@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"garantex-monitor/internal/models"
 	"garantex-monitor/internal/storage"
+	"garantex-monitor/pkg/metrics"
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
@@ -33,13 +35,11 @@ func NewGMService(storage storage.GMStorageIface, logger *zap.Logger) *GMService
 func (g *GMService) GetRates(ctx context.Context) (*GetRatesOut, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, URL, nil)
 	if err != nil {
-		g.logger.Error("Failed to create request", zap.Error(err))
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	r, err := g.client.Do(req)
 	if err != nil {
-		g.logger.Error("Failed to execute request", zap.Error(err))
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer func() {
@@ -50,19 +50,21 @@ func (g *GMService) GetRates(ctx context.Context) (*GetRatesOut, error) {
 
 	var res models.Depth
 	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
-		g.logger.Error("Failed to unmarshal response", zap.Error(err))
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
 	if len(res.Asks) == 0 || len(res.Bids) == 0 {
-		g.logger.Error("No data in response")
 		return nil, fmt.Errorf("no data in response")
 	}
 
 	// TODO: save to DB
 	go func() {
+		// Метрики
+		timer := prometheus.NewTimer(metrics.DbDurationSeconds.WithLabelValues("AddRate"))
+		defer timer.ObserveDuration()
+
 		err := g.storage.AddRate(
-			context.Background(),
+			context.Background(), // TODO добавить контекст
 			&storage.AddRateIn{
 				Timestamp: time.Unix(res.Timestamp, 0),
 				Ask:       res.Asks[0].Price,

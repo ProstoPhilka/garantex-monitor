@@ -7,3 +7,5 @@ linters:
     - unused
     - gocyclo
     - unparam
+# linters:
+#   enable-all: true

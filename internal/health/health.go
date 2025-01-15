@@ -34,7 +34,6 @@ func (hc *GMHealhCheck) Check(
 
 	hc.logger.Debug("successful server healthcheck")
 	return &grpc_health_v1.HealthCheckResponse{
-
 		Status: grpc_health_v1.HealthCheckResponse_SERVING,
 	}, nil
 }
