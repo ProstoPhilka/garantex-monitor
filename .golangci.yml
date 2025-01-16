@@ -1,0 +1,11 @@
+linters:
+  enable:
+    - bodyclose
+    - revive
+    - errcheck
+    - staticcheck
+    - unused
+    - gocyclo
+    - unparam
+# linters:
+#   enable-all: true
